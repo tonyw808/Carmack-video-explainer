@@ -60,6 +60,12 @@ are no-ops). Reserve runs in a Serializable interactive transaction and re-check
 after inserting the debit row, rolling back on negative balance — correct on SQLite (single
 writer) and on Postgres (serializable).
 
+## D11 — Model switch mid-build: Fable 5 → Opus 4.8 (session 1)
+Session 1 started on Claude Fable 5 (Phase 0 + scaffold) and was switched by the owner to
+`claude-opus-4-8` partway through Slice 1. Per the working agreement, the repo is the source
+of truth; the switch changes nothing about the plan. Recorded here so the STATE.md model
+attribution stays honest across the handoff.
+
 ## D10 — PdsCliProvider is built against captured real CLI help, executed never (here)
 Phase 0 successfully installed `@promptdriven/pds@0.1.11` and captured its real command
 surface offline (docs/pds-cli-notes.md). The provider therefore uses only verified command

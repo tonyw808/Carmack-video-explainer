@@ -1,19 +1,20 @@
 # Build State
 
-_Last update: 2026-07-20, session 1 (Claude Fable 5)._
+_Last update: 2026-07-22, session 1 (started Claude Fable 5, switched to Opus 4.8 mid-Slice-1 — see D11)._
 
 ## Current status
 
-**Phase 0 complete.** Environment probed (docs/ENVIRONMENT.md), PDS CLI discovered on npm and
-interrogated offline (docs/pds-cli-notes.md), PLAN.md written. Starting Slice 1.
+**Slice 1 complete.** pnpm workspace + Next 15 + worker + Prisma(SQLite) all boot. Auth.js v5
+magic-link flow verified END TO END over HTTP (request link → dev retrieval endpoint →
+callback → live DB session, role defaulting works). Full suite green. Starting Slice 2.
 
 ## Slice progress
 
 | # | Slice | Status |
 |---|---|---|
 | 0 | Phase 0 recon + plan | ✅ done |
-| 1 | Scaffold + auth | ⬜ next |
-| 2 | Credit ledger + pricing | ⬜ |
+| 1 | Scaffold + auth | ✅ done |
+| 2 | Credit ledger + pricing | ⬜ next |
 | 3 | Stripe credits e2e (test mode) | ⬜ |
 | 4 | Queue + worker + MockProvider | ⬜ |
 | 5 | Product UI | ⬜ |
