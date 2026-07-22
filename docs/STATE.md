@@ -4,16 +4,18 @@ _Last update: 2026-07-22, session 1 (started Claude Fable 5, switched to Opus 4.
 
 ## Current status
 
-**Slice 3 complete.** Stripe credit purchases end to end. 39 tests green (13 new billing
-tests). Webhook signature signing/verification implemented to Stripe's exact scheme (offline
-+ accepts real Stripe webhooks); handler credits idempotently (ledger reference=event.id +
-stripe_events table), derives credits from the pack not the event amount (anti-tamper), and
-rejects bad signatures. Dev fake-checkout mints a signed synthetic event through the same
-handler. Billing page: packs, live balance, ledger table.
+**Slice 4 complete.** Full generation pipeline. 58 tests green (19 new: storage 6, queue 6
+incl. real BullMQ-on-Redis + db-claim exclusivity, MockProvider 7). Packages: `storage`
+(StorageDriver; local + S3/R2 signed-URL), `queue` (QueueDriver; memory/db-claim/bullmq),
+`video-provider` (VideoProvider; MockProvider emits committed per-aspect mp4+thumb, failure
+injection). Job submit API (zod + moderation + rate limit + authoritative cost + atomic
+reserve+create+enqueue). Worker: claim loop, concurrency cap, progress, graceful shutdown
+that re-queues in-flight jobs. Authenticated file route with per-user ownership + Range.
 
-VERIFIED LIVE over HTTP: new user 0 → buy creator (550) → buy starter (650); real
-/api/stripe/webhook route credited studio (+1200 → 1850), duplicate delivery idempotent,
-tampered body → 400. Starting Slice 4.
+VERIFIED LIVE: buy 550 → submit (cost 30, →520) → worker succeeded in ~4s → real 4s mp4
+downloads (206 range OK), cross-user 403, anon 401; force-fail job auto-refunded
+(520→498→520); SIGTERM mid-flight re-queued the job, restart drained it to success. Final
+ledger balances exactly. Starting Slice 5.
 
 ## Slice progress
 
@@ -23,8 +25,8 @@ tampered body → 400. Starting Slice 4.
 | 1 | Scaffold + auth | ✅ done |
 | 2 | Credit ledger + pricing | ✅ done |
 | 3 | Stripe credits e2e (test mode) | ✅ done |
-| 4 | Queue + worker + MockProvider | ⬜ next |
-| 5 | Product UI | ⬜ |
+| 4 | Queue + worker + MockProvider | ✅ done |
+| 5 | Product UI | ⬜ next |
 | 6 | Failure paths + refunds + admin | ⬜ |
 | 7 | Polish, e2e, docs, runbook | ⬜ |
 

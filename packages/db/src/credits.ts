@@ -67,6 +67,35 @@ async function sumBalance(tx: TxLike, userId: string): Promise<number> {
   return agg._sum.delta ?? 0;
 }
 
+/**
+ * Insert a debit row inside an existing (serializable) transaction and enforce the balance
+ * floor: throws InsufficientCreditsError (rolling the caller's tx back) if the balance would
+ * go negative. Shared by reserveCredits and createJobWithReservation so the invariant lives
+ * in one place. See reserveCredits for the concurrency argument.
+ */
+export async function debitAndCheckFloor(
+  tx: TxLike,
+  input: { userId: string; amount: number; reason: LedgerReason; reference: string; note?: string }
+): Promise<number> {
+  await tx.creditLedgerEntry.create({
+    data: {
+      userId: input.userId,
+      delta: -input.amount,
+      reason: input.reason,
+      reference: input.reference,
+      note: input.note,
+    },
+  });
+  const balance = await sumBalance(tx, input.userId);
+  if (balance < 0) {
+    throw new InsufficientCreditsError(input.amount, balance + input.amount);
+  }
+  return balance;
+}
+
+export const SERIALIZABLE = { isolationLevel: Prisma.TransactionIsolationLevel.Serializable } as const;
+export { withWriteRetry };
+
 /** Current balance = SUM(delta) for the user. Zero if the user has no ledger rows. */
 export async function getBalance(client: TxLike, userId: string): Promise<number> {
   return sumBalance(client, userId);
@@ -166,20 +195,7 @@ export async function reserveCredits(client: PrismaClient, input: LedgerInput): 
     try {
       return await client.$transaction(
         async (tx) => {
-          await tx.creditLedgerEntry.create({
-            data: {
-              userId: input.userId,
-              delta: -input.amount,
-              reason: input.reason,
-              reference: input.reference,
-              note: input.note,
-            },
-          });
-          const balance = await sumBalance(tx, input.userId);
-          if (balance < 0) {
-            // roll back the debit; report what was actually available beforehand
-            throw new InsufficientCreditsError(input.amount, balance + input.amount);
-          }
+          const balance = await debitAndCheckFloor(tx, input);
           return { balance, alreadyApplied: false };
         },
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable, timeout: 15000, maxWait: 15000 }

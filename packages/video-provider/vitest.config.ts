@@ -2,8 +2,7 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    name: 'db',
+    name: 'video-provider',
     passWithNoTests: true,
-    fileParallelism: false,
   },
 });

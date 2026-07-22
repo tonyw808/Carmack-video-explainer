@@ -2,8 +2,7 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    name: 'db',
+    name: 'storage',
     passWithNoTests: true,
-    fileParallelism: false,
   },
 });

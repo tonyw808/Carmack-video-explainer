@@ -17,6 +17,12 @@ export {
   DEFAULT_PRICING,
   DEFAULT_PACKS,
 } from './price-config';
+export {
+  createJobWithReservation,
+  recentJobCount,
+  refundJob,
+  type CreateJobInput,
+} from './jobs';
 export { Prisma, PrismaClient } from '../generated/client/index.js';
 export type {
   User,
