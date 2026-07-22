@@ -60,6 +60,16 @@ are no-ops). Reserve runs in a Serializable interactive transaction and re-check
 after inserting the debit row, rolling back on negative balance — correct on SQLite (single
 writer) and on Postgres (serializable).
 
+## D12 — SQLite clients pinned to connection_limit=1
+SQLite is single-writer. Prisma's default pool opens several connections; concurrent
+interactive transactions then fight for the write lock and time out (observed: a 10-way
+reserve burst hung for >12s). Appending `?connection_limit=1` to every SQLite URL
+(client.ts `withSqliteParams`, applied to dev, prod-sqlite, and per-test clones) serializes
+this process's transactions on one connection — correct and fast for SQLite (burst now
+228ms). Cross-process contention (web + worker on the same file) still surfaces as
+SQLITE_BUSY and is absorbed by the ledger's `withWriteRetry`. Postgres URLs are untouched,
+so production keeps its real connection pool.
+
 ## D11 — Model switch mid-build: Fable 5 → Opus 4.8 (session 1)
 Session 1 started on Claude Fable 5 (Phase 0 + scaffold) and was switched by the owner to
 `claude-opus-4-8` partway through Slice 1. Per the working agreement, the repo is the source

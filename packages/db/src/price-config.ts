@@ -1,14 +1,30 @@
-// Canonical default price configuration, shared by the seed script and by runtime
-// fallbacks when a PriceConfig row is absent. Values live in the DB so admins can
-// change them without a deploy; the shapes are zod-validated in @reelforge/core.
+// Runtime price-config access: read the admin-editable rows, validate with the core
+// schemas, fall back to core defaults when a row is absent. The canonical default
+// values live in @reelforge/core so the browser cost preview and the server agree.
+import {
+  DEFAULT_PACKS,
+  DEFAULT_PRICING,
+  packsSchema,
+  pricingSchema,
+  type CreditPack,
+  type Pricing,
+} from '@reelforge/core';
+import type { PrismaClient } from '../generated/client/index.js';
 
-export const DEFAULT_PRICING = {
-  baseCredits: 10,
-  perSecondCredits: 4,
-} as const;
+export { DEFAULT_PACKS, DEFAULT_PRICING };
 
-export const DEFAULT_PACKS = [
-  { id: 'starter', label: 'Starter', credits: 100, priceCents: 500 },
-  { id: 'creator', label: 'Creator', credits: 550, priceCents: 2500 },
-  { id: 'studio', label: 'Studio', credits: 1200, priceCents: 5000 },
-] as const;
+type ClientLike = Pick<PrismaClient, 'priceConfig'>;
+
+export async function loadPricing(client: ClientLike): Promise<Pricing> {
+  const row = await client.priceConfig.findUnique({ where: { key: 'pricing' } });
+  if (!row) return DEFAULT_PRICING;
+  const parsed = pricingSchema.safeParse(JSON.parse(row.valueJson));
+  return parsed.success ? parsed.data : DEFAULT_PRICING;
+}
+
+export async function loadPacks(client: ClientLike): Promise<CreditPack[]> {
+  const row = await client.priceConfig.findUnique({ where: { key: 'packs' } });
+  if (!row) return DEFAULT_PACKS;
+  const parsed = packsSchema.safeParse(JSON.parse(row.valueJson));
+  return parsed.success ? parsed.data : DEFAULT_PACKS;
+}

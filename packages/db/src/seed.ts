@@ -1,6 +1,6 @@
 // Seeds baseline price configuration. Idempotent — safe to run repeatedly.
+import { DEFAULT_PACKS, DEFAULT_PRICING } from '@reelforge/core';
 import { prisma } from './client';
-import { DEFAULT_PACKS, DEFAULT_PRICING } from './price-config';
 
 async function main() {
   await prisma.priceConfig.upsert({

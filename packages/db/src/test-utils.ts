@@ -4,7 +4,7 @@ import { copyFileSync, mkdirSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createPrismaClient } from './client';
+import { createPrismaClient, withSqliteParams } from './client';
 import type { PrismaClient } from '../generated/client/index.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -23,7 +23,7 @@ export function createTestDb(): TestDb {
   mkdirSync(testDir, { recursive: true });
   const filePath = path.join(testDir, `db-${randomBytes(6).toString('hex')}.db`);
   copyFileSync(templateDb, filePath);
-  const url = 'file:' + filePath;
+  const url = withSqliteParams('file:' + filePath);
   const client = createPrismaClient(url);
   return {
     client,

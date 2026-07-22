@@ -1,4 +1,22 @@
 export { prisma, createPrismaClient, resolveDatabaseUrl } from './client';
+export {
+  getBalance,
+  reserveCredits,
+  refundCredits,
+  creditPurchase,
+  creditSignupBonus,
+  adjustCredits,
+  InsufficientCreditsError,
+  type LedgerReason,
+  type LedgerInput,
+  type LedgerResult,
+} from './credits';
+export {
+  loadPricing,
+  loadPacks,
+  DEFAULT_PRICING,
+  DEFAULT_PACKS,
+} from './price-config';
 export { Prisma, PrismaClient } from '../generated/client/index.js';
 export type {
   User,

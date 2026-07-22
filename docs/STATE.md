@@ -4,9 +4,15 @@ _Last update: 2026-07-22, session 1 (started Claude Fable 5, switched to Opus 4.
 
 ## Current status
 
-**Slice 1 complete.** pnpm workspace + Next 15 + worker + Prisma(SQLite) all boot. Auth.js v5
-magic-link flow verified END TO END over HTTP (request link → dev retrieval endpoint →
-callback → live DB session, role defaulting works). Full suite green. Starting Slice 2.
+**Slice 2 complete.** Credit ledger + pricing built tests-first. 26 tests green: pricing
+function (base + per-second, monotonic, round-up), moderation deny module (csam /
+nonconsensual real-person / incitement, with over-block guards), and the ledger —
+append-only, balance = SUM(delta), serializable reserve that refuses to overdraw, and full
+idempotency on (reason, reference). Concurrency invariant test proves no overdraw under a
+10-way burst. Balance API + session guards added. Starting Slice 3.
+
+Key impl note: SQLite clients use `?connection_limit=1` (D12) so intra-process interactive
+transactions serialize cleanly; cross-process SQLITE_BUSY handled by ledger write-retry.
 
 ## Slice progress
 
@@ -14,8 +20,8 @@ callback → live DB session, role defaulting works). Full suite green. Starting
 |---|---|---|
 | 0 | Phase 0 recon + plan | ✅ done |
 | 1 | Scaffold + auth | ✅ done |
-| 2 | Credit ledger + pricing | ⬜ next |
-| 3 | Stripe credits e2e (test mode) | ⬜ |
+| 2 | Credit ledger + pricing | ✅ done |
+| 3 | Stripe credits e2e (test mode) | ⬜ next |
 | 4 | Queue + worker + MockProvider | ⬜ |
 | 5 | Product UI | ⬜ |
 | 6 | Failure paths + refunds + admin | ⬜ |
