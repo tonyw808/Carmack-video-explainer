@@ -75,7 +75,26 @@ export async function refundJob(
     userId: job.userId,
     amount: job.costCredits,
     reason,
-    reference: job.id,
+    reference: `${reason}:${job.id}`,
     note: 'Automatic refund',
   });
+}
+
+/**
+ * Cancel a job that is still queued: atomically flip queued→canceled (so a worker cannot
+ * claim it mid-cancel) and refund. Returns 'canceled' on success, 'not_queued' if the job
+ * has already been claimed/finished (the caller decides how to surface that). Running-job
+ * cancellation is handled separately (Slice 6, requires signaling the worker).
+ */
+export async function cancelQueuedJob(
+  client: PrismaClient,
+  job: Pick<Job, 'id' | 'userId' | 'costCredits'>
+): Promise<'canceled' | 'not_queued'> {
+  const flipped = await client.job.updateMany({
+    where: { id: job.id, status: 'queued' },
+    data: { status: 'canceled', finishedAt: new Date(), error: 'Canceled before it started.' },
+  });
+  if (flipped.count !== 1) return 'not_queued';
+  await refundJob(client, job, 'job_cancel_refund');
+  return 'canceled';
 }

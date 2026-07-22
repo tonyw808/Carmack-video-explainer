@@ -21,6 +21,7 @@ export {
   createJobWithReservation,
   recentJobCount,
   refundJob,
+  cancelQueuedJob,
   type CreateJobInput,
 } from './jobs';
 export { Prisma, PrismaClient } from '../generated/client/index.js';

@@ -7,7 +7,11 @@
   "types": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./env": "./src/env.ts"
+    "./env": "./src/env.ts",
+    "./params": "./src/params.ts",
+    "./pricing": "./src/pricing.ts",
+    "./packs": "./src/packs.ts",
+    "./moderation": "./src/moderation.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

@@ -1,8 +1,11 @@
 import Link from 'next/link';
 import { auth, signOut } from '@/lib/auth';
+import { getBalance, prisma } from '@reelforge/db';
+import { CreditBalance } from './credit-balance';
 
 export async function Nav() {
   const session = await auth();
+  const balance = session?.user?.id ? await getBalance(prisma, session.user.id) : 0;
 
   return (
     <header className="border-b border-zinc-800 bg-zinc-950/80 backdrop-blur">
@@ -35,7 +38,8 @@ export async function Nav() {
         <div className="ml-auto flex items-center gap-3 text-sm">
           {session?.user ? (
             <>
-              <Link href="/account" className="text-zinc-400 hover:text-zinc-100">
+              <CreditBalance initial={balance} />
+              <Link href="/account" className="hidden text-zinc-400 hover:text-zinc-100 sm:inline">
                 {session.user.email}
               </Link>
               <form

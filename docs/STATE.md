@@ -4,18 +4,19 @@ _Last update: 2026-07-22, session 1 (started Claude Fable 5, switched to Opus 4.
 
 ## Current status
 
-**Slice 4 complete.** Full generation pipeline. 58 tests green (19 new: storage 6, queue 6
-incl. real BullMQ-on-Redis + db-claim exclusivity, MockProvider 7). Packages: `storage`
-(StorageDriver; local + S3/R2 signed-URL), `queue` (QueueDriver; memory/db-claim/bullmq),
-`video-provider` (VideoProvider; MockProvider emits committed per-aspect mp4+thumb, failure
-injection). Job submit API (zod + moderation + rate limit + authoritative cost + atomic
-reserve+create+enqueue). Worker: claim loop, concurrency cap, progress, graceful shutdown
-that re-queues in-flight jobs. Authenticated file route with per-user ownership + Range.
+**Slice 5 complete.** All product surfaces built and VERIFIED LIVE with Playwright
+screenshots: landing (hero, gallery, how-it-works, pricing), generate (prompt, duration
+slider, aspect, style pills, reference-image upload, live cost preview using the SAME
+computeJobCost the server bills with), queue (2s polling, live progress bar, cancel-
+while-queued), library (inline video playback, download-as-blob, delete), billing, and a
+live credit-balance pill in nav. Endpoints added: /api/uploads (reference images),
+/api/jobs/:id/cancel (atomic queued→canceled + refund), DELETE /api/jobs/:id. Golden path
+confirmed through the browser: sign in → buy → generate → watch inline → download.
 
-VERIFIED LIVE: buy 550 → submit (cost 30, →520) → worker succeeded in ~4s → real 4s mp4
-downloads (206 range OK), cross-user 403, anon 401; force-fail job auto-refunded
-(520→498→520); SIGTERM mid-flight re-queued the job, restart drained it to success. Final
-ledger balances exactly. Starting Slice 5.
+Two real bugs found+fixed via live testing (D13, D14): client components pulling env.ts/
+node:fs through the core barrel (fixed with granular `@reelforge/core/{params,pricing,...}`
+exports); operational port-collision confusion (stale dev servers). 58 tests still green.
+Starting Slice 6.
 
 ## Slice progress
 
@@ -26,8 +27,8 @@ ledger balances exactly. Starting Slice 5.
 | 2 | Credit ledger + pricing | ✅ done |
 | 3 | Stripe credits e2e (test mode) | ✅ done |
 | 4 | Queue + worker + MockProvider | ✅ done |
-| 5 | Product UI | ⬜ next |
-| 6 | Failure paths + refunds + admin | ⬜ |
+| 5 | Product UI | ✅ done |
+| 6 | Failure paths + refunds + admin | ⬜ next |
 | 7 | Polish, e2e, docs, runbook | ⬜ |
 
 ## How to resume

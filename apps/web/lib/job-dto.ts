@@ -1,26 +1,8 @@
 import type { Job, Video } from '@reelforge/db';
-import { parseJobParams, type JobParams } from '@reelforge/core';
+import { parseJobParams } from '@reelforge/core';
+import type { JobDto, JobStatus } from './job-types';
 
-export interface JobDto {
-  id: string;
-  status: Job['status'];
-  prompt: string;
-  params: JobParams;
-  costCredits: number;
-  progress: number;
-  error: string | null;
-  createdAt: string;
-  startedAt: string | null;
-  finishedAt: string | null;
-  video: {
-    mp4Url: string;
-    thumbUrl: string;
-    durationSec: number;
-    width: number;
-    height: number;
-    sizeBytes: number;
-  } | null;
-}
+export type { JobDto } from './job-types';
 
 export function toJobDto(
   job: Job,
@@ -29,7 +11,7 @@ export function toJobDto(
 ): JobDto {
   return {
     id: job.id,
-    status: job.status,
+    status: job.status as JobStatus,
     prompt: job.prompt,
     params: safeParams(job.paramsJson),
     costCredits: job.costCredits,
@@ -52,10 +34,10 @@ export function toJobDto(
   };
 }
 
-function safeParams(json: string): JobParams {
+function safeParams(json: string) {
   try {
     return parseJobParams(json);
   } catch {
-    return { durationSec: 0, aspectRatio: '16:9', stylePreset: 'cinematic' };
+    return { durationSec: 0, aspectRatio: '16:9' as const, stylePreset: 'cinematic' as const };
   }
 }

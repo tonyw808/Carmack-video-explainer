@@ -29,8 +29,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ key:
   const { key: segments } = await params;
   const key = segments.join('/');
 
-  // Ownership: keys are namespaced by user id; admins may read any.
-  if (user.role !== 'admin' && !key.startsWith(`videos/${user.id}/`)) {
+  // Ownership: keys are namespaced by user id (videos/… and uploads/…); admins may read any.
+  const ownsKey = key.startsWith(`videos/${user.id}/`) || key.startsWith(`uploads/${user.id}/`);
+  if (user.role !== 'admin' && !ownsKey) {
     return NextResponse.json({ error: 'forbidden' }, { status: 403 });
   }
 

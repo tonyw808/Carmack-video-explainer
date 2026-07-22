@@ -60,6 +60,24 @@ are no-ops). Reserve runs in a Serializable interactive transaction and re-check
 after inserting the debit row, rolling back on negative balance — correct on SQLite (single
 writer) and on Postgres (serializable).
 
+## D14 — Operational: one dev server, watch the port
+Resetting dev.db while a dev server holds it open corrupts that server's SQLite handle
+("attempt to write a readonly database") and cascades into webpack CSS/vendor-chunk errors;
+and a still-bound port 3000 silently pushes a new `next dev` to 3004, so curls hit the stale
+server. Lesson recorded for future sessions: kill prior servers and confirm the port before
+starting; reset the DB only with the server stopped. Background long-running servers via the
+harness's tracked background tasks (they survive across turns), not `nohup … & disown`
+(which gets reaped).
+
+## D13 — Client components import pure core submodules, never the barrel
+`@reelforge/core`'s index re-exports env.ts (node:fs/node:path). A 'use client' component
+importing anything from the barrel makes webpack try to bundle node:fs → build failure
+(`UnhandledSchemeError: node:fs`). Fix: granular package exports
+(`@reelforge/core/params`, `/pricing`, `/packs`, `/moderation`) that pull zero Node
+built-ins; client code imports those. Server code may still use the barrel. Caught only by
+loading the page in a real browser — a reminder that typecheck/lint/unit tests don't cover
+the server/client bundle boundary (hence the Slice 7 e2e).
+
 ## D12 — SQLite clients pinned to connection_limit=1
 SQLite is single-writer. Prisma's default pool opens several connections; concurrent
 interactive transactions then fight for the write lock and time out (observed: a 10-way
