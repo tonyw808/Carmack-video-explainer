@@ -91,7 +91,7 @@ export function QueueList({ initialJobs }: { initialJobs: JobDto[] }) {
                   View
                 </Link>
               )}
-              {job.status === 'queued' && (
+              {(job.status === 'queued' || job.status === 'running') && (
                 <button
                   onClick={() => cancel(job.id)}
                   disabled={busy === job.id}

@@ -1,7 +1,7 @@
-// Cancel a job that hasn't started yet (queued). Atomic + refunds. Canceling a running job
-// is a Slice 6 concern (it requires signaling the worker).
+// Cancel a job that is queued or running. Atomic flip to canceled + refund; the worker
+// detects the change and aborts any in-flight generation.
 import { NextRequest, NextResponse } from 'next/server';
-import { cancelQueuedJob, prisma } from '@reelforge/db';
+import { cancelJob, prisma } from '@reelforge/db';
 import { getApiUser } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
@@ -16,12 +16,9 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ error: 'not found' }, { status: 404 });
   }
 
-  const result = await cancelQueuedJob(prisma, job);
-  if (result === 'not_queued') {
-    return NextResponse.json(
-      { error: 'Job has already started or finished and cannot be canceled here.' },
-      { status: 409 }
-    );
+  const result = await cancelJob(prisma, job);
+  if (result === 'already_terminal') {
+    return NextResponse.json({ error: 'Job has already finished.' }, { status: 409 });
   }
   return NextResponse.json({ status: 'canceled', refunded: job.costCredits });
 }
