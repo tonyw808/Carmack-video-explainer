@@ -4,15 +4,16 @@ _Last update: 2026-07-22, session 1 (started Claude Fable 5, switched to Opus 4.
 
 ## Current status
 
-**Slice 2 complete.** Credit ledger + pricing built tests-first. 26 tests green: pricing
-function (base + per-second, monotonic, round-up), moderation deny module (csam /
-nonconsensual real-person / incitement, with over-block guards), and the ledger —
-append-only, balance = SUM(delta), serializable reserve that refuses to overdraw, and full
-idempotency on (reason, reference). Concurrency invariant test proves no overdraw under a
-10-way burst. Balance API + session guards added. Starting Slice 3.
+**Slice 3 complete.** Stripe credit purchases end to end. 39 tests green (13 new billing
+tests). Webhook signature signing/verification implemented to Stripe's exact scheme (offline
++ accepts real Stripe webhooks); handler credits idempotently (ledger reference=event.id +
+stripe_events table), derives credits from the pack not the event amount (anti-tamper), and
+rejects bad signatures. Dev fake-checkout mints a signed synthetic event through the same
+handler. Billing page: packs, live balance, ledger table.
 
-Key impl note: SQLite clients use `?connection_limit=1` (D12) so intra-process interactive
-transactions serialize cleanly; cross-process SQLITE_BUSY handled by ledger write-retry.
+VERIFIED LIVE over HTTP: new user 0 → buy creator (550) → buy starter (650); real
+/api/stripe/webhook route credited studio (+1200 → 1850), duplicate delivery idempotent,
+tampered body → 400. Starting Slice 4.
 
 ## Slice progress
 
@@ -21,8 +22,8 @@ transactions serialize cleanly; cross-process SQLITE_BUSY handled by ledger writ
 | 0 | Phase 0 recon + plan | ✅ done |
 | 1 | Scaffold + auth | ✅ done |
 | 2 | Credit ledger + pricing | ✅ done |
-| 3 | Stripe credits e2e (test mode) | ⬜ next |
-| 4 | Queue + worker + MockProvider | ⬜ |
+| 3 | Stripe credits e2e (test mode) | ✅ done |
+| 4 | Queue + worker + MockProvider | ⬜ next |
 | 5 | Product UI | ⬜ |
 | 6 | Failure paths + refunds + admin | ⬜ |
 | 7 | Polish, e2e, docs, runbook | ⬜ |

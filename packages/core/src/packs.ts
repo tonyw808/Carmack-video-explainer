@@ -21,3 +21,9 @@ export const DEFAULT_PACKS: CreditPack[] = [
 export function findPack(packs: CreditPack[], id: string): CreditPack | undefined {
   return packs.find((p) => p.id === id);
 }
+
+export function findPackOrThrow(packs: CreditPack[], id: string): CreditPack {
+  const pack = findPack(packs, id);
+  if (!pack) throw new Error(`unknown credit pack: ${id}`);
+  return pack;
+}

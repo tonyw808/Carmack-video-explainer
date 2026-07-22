@@ -14,7 +14,7 @@ export {
 export type { AspectRatio, StylePreset, JobParams, GenerateRequest } from './params';
 export { pricingSchema, DEFAULT_PRICING, computeJobCost } from './pricing';
 export type { Pricing } from './pricing';
-export { creditPackSchema, packsSchema, DEFAULT_PACKS, findPack } from './packs';
+export { creditPackSchema, packsSchema, DEFAULT_PACKS, findPack, findPackOrThrow } from './packs';
 export type { CreditPack } from './packs';
 export {
   moderatePrompt,

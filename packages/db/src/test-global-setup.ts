@@ -11,7 +11,15 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const pkgRoot = path.join(here, '..');
 const repoRoot = path.join(pkgRoot, '../..');
 
-export const TEST_DB_DIR = path.join(repoRoot, '.data/test');
+// Each vitest project points at its own dir (via REELFORGE_TEST_DB_DIR) so their template
+// builds never race on the same SQLite file. Defaults to .data/test for the db package.
+export function testDbDir(): string {
+  const configured = process.env.REELFORGE_TEST_DB_DIR;
+  if (configured) return path.isAbsolute(configured) ? configured : path.join(repoRoot, configured);
+  return path.join(repoRoot, '.data/test');
+}
+
+export const TEST_DB_DIR = testDbDir();
 export const TEMPLATE_DB = path.join(TEST_DB_DIR, 'template.db');
 
 function prismaCli(args: string[], env: Record<string, string> = {}) {
@@ -24,13 +32,15 @@ function prismaCli(args: string[], env: Record<string, string> = {}) {
 }
 
 export default function setup() {
-  rmSync(TEST_DB_DIR, { recursive: true, force: true });
-  mkdirSync(TEST_DB_DIR, { recursive: true });
+  const dir = testDbDir();
+  const template = path.join(dir, 'template.db');
+  rmSync(dir, { recursive: true, force: true });
+  mkdirSync(dir, { recursive: true });
 
   if (!existsSync(path.join(pkgRoot, 'generated/client/index.js'))) {
-    prismaCli(['generate'], { DATABASE_URL: 'file:' + TEMPLATE_DB });
+    prismaCli(['generate'], { DATABASE_URL: 'file:' + template });
   }
   prismaCli(['db', 'push', '--skip-generate', '--accept-data-loss'], {
-    DATABASE_URL: 'file:' + TEMPLATE_DB,
+    DATABASE_URL: 'file:' + template,
   });
 }
