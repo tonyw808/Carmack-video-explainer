@@ -2,6 +2,16 @@
 
 Append-only. Each entry: context → decision → consequence.
 
+## D15 — E2E boots its own stack with a DB-first script (not Playwright globalSetup)
+Playwright's `globalSetup` races the `webServer`, so the server issued queries against an
+unmigrated e2e DB (P2021 "table does not exist"). Fix: `scripts/e2e-boot.mjs` resets +
+`migrate deploy` + seeds the env-provided SQLite DB synchronously, THEN starts the web+worker
+orchestrator in-process; Playwright's `webServer.command` points at it. The e2e runs on port
+3210 with its own `.data/e2e.db` so it never collides with a running dev server. It uses the
+preinstalled Chromium via an explicit `executablePath` (never downloads). Also: always kill a
+prior e2e webServer before re-running — a leftover server on 3210 makes Playwright appear to
+run stale code (D14's port lesson, again).
+
 ## D1 — Branch name: `claude/reelforge-v1-build-cd8mfo` (not `build/reelforge-v1`)
 The session brief asks for `build/reelforge-v1`, but this cloud session's git harness
 designates `claude/reelforge-v1-build-cd8mfo` as the only branch it may push to. The repo is
