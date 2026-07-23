@@ -1,0 +1,160 @@
+// Reelforge data model — SQLite profile (dev/test).
+// packages/db/prisma/schema.postgres.prisma is generated from this file by
+// `pnpm --filter @reelforge/db sync-schemas`; only the datasource differs.
+// Portability constraints (docs/DECISIONS.md D3): no enums, no Json columns.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ── Auth.js (users, accounts, sessions, verification tokens) ────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  // "user" | "admin" — validated by zod at every boundary (no enums on sqlite)
+  role          String    @default("user")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts Account[]
+  sessions Session[]
+  ledger   CreditLedgerEntry[]
+  jobs     Job[]
+  videos   Video[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ── Credits ─────────────────────────────────────────────────────────────────
+
+// Append-only. A user's balance is exactly SUM(delta) over their rows.
+// reason: purchase | job_reserve | job_refund | job_cancel_refund | manual_refund |
+//         admin_adjust | signup_bonus
+// The (reason, reference) unique pair makes purchases and refunds idempotent.
+model CreditLedgerEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  delta     Int
+  reason    String
+  reference String
+  note      String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([reason, reference])
+  @@index([userId, createdAt])
+}
+
+// ── Jobs and videos ─────────────────────────────────────────────────────────
+
+// status: queued | running | succeeded | failed | canceled (zod-validated)
+model Job {
+  id           String    @id @default(cuid())
+  userId       String
+  status       String    @default("queued")
+  prompt       String
+  // JSON string: { durationSec, aspectRatio, stylePreset, referenceImageKey? } (D3)
+  paramsJson   String
+  costCredits  Int
+  // User-safe failure summary; raw provider output goes to providerLog.
+  error        String?
+  providerName String
+  providerRef  String?
+  providerLog  String?
+  progress     Int       @default(0)
+  attempts     Int       @default(0)
+  queuedAt     DateTime  @default(now())
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video Video?
+
+  @@index([status, queuedAt])
+  @@index([userId, createdAt])
+}
+
+model Video {
+  id              String   @id @default(cuid())
+  jobId           String   @unique
+  userId          String
+  storageKeyMp4   String
+  storageKeyThumb String
+  durationSec     Int
+  width           Int
+  height          Int
+  sizeBytes       Int
+  createdAt       DateTime @default(now())
+
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+// ── Stripe ──────────────────────────────────────────────────────────────────
+
+// One row per processed Stripe event id → idempotent webhook handling.
+model StripeEvent {
+  id          String   @id
+  type        String
+  payloadJson String
+  processedAt DateTime @default(now())
+}
+
+// Key-value config (JSON strings): "pricing" (base/per-second credits), "packs".
+model PriceConfig {
+  key       String   @id
+  valueJson String
+  updatedAt DateTime @updatedAt
+}

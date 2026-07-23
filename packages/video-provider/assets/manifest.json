@@ -1,0 +1,29 @@
+{
+    "16x9": {
+        "mp4": "sample-16x9.mp4",
+        "thumb": "sample-16x9.jpg",
+        "width": 640,
+        "height": 360,
+        "durationSec": 4,
+        "mp4Bytes": 42059,
+        "thumbBytes": 9698
+    },
+    "9x16": {
+        "mp4": "sample-9x16.mp4",
+        "thumb": "sample-9x16.jpg",
+        "width": 360,
+        "height": 640,
+        "durationSec": 4,
+        "mp4Bytes": 22075,
+        "thumbBytes": 5627
+    },
+    "1x1": {
+        "mp4": "sample-1x1.mp4",
+        "thumb": "sample-1x1.jpg",
+        "width": 480,
+        "height": 480,
+        "durationSec": 4,
+        "mp4Bytes": 45523,
+        "thumbBytes": 7752
+    }
+}
